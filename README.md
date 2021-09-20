@@ -44,6 +44,7 @@ The directory structure of baseflow looks like this:
 ├── comparison              <- an evaluation criterion to comparison different methods
 │
 ├── requirements.txt        <- File for installing baseflow dependencies
+│
 └── README.md
 ```
 <br>
