@@ -1,8 +1,8 @@
 <div align="center">
 
-# Rapid Watershed Delineation<br>using an Automatic Outlet Relocation Algorithm
+# baseflow
 
-Delineating a large number of watersheds for hydrological simulations in the big data era 🔥<br>
+An open-source Python package for baseflow separation 🔥<br>
 
 </div>
 <br>
@@ -17,32 +17,24 @@ Figure Here
 
 ## ⚡&nbsp;&nbsp;Usage
 
-
-### Start
-- First, download watershed.zip from the [release page](https://github.com/xiejx5/watershed_delineation/releases)
-- Next, unzip and open watershed.exe, clip start to execute an example
+### Install
+```bash
+pip install baseflow
+```
 <br>
+
+
+### Example
+```python
+import baseflow
+```
+<br>
+
 
 
 ## Project Structure
 The directory structure of baseflow looks like this:
 ```
-├── bash                    <- Bash scripts
-│   ├── setup_conda.sh          <- Setup conda environment
-│   └── schedule.sh             <- Schedule execution of many runs
-│
-├── configs                 <- Hydra configuration files
-│   ├── callbacks               <- Callbacks configs
-│   ├── datamodule              <- Datamodule configs
-│   ├── experiment              <- Experiment configs
-│   ├── hparams_search          <- Hyperparameter search configs
-│   ├── hydra                   <- Hydra related configs
-│   ├── logger                  <- Logger configs
-│   ├── model                   <- Model configs
-│   ├── trainer                 <- Trainer configs
-│   │
-│   └── config.yaml             <- Main project configuration file
-│
 ├── methods                 <- implements for 12 baseflow separation methods
 │
 ├── recession_analysis      <- tools for estimating recession coefficiency
@@ -54,4 +46,17 @@ The directory structure of baseflow looks like this:
 ├── requirements.txt        <- File for installing baseflow dependencies
 └── README.md
 ```
+<br>
+
+## 📌&nbsp;&nbsp;Todo
+
+
+### Nolinear reservoir assumption
+- Implement the nolinear reservoir assumption from the [paper](https://github.com/xiejx5/watershed_delineation/releases)
+- Employ a time-varing recession coefficiency for baseflow separation
+<br>
+
+### Applicable to other time scales
+1. The current version only applies to the daily scale
+2. The package needs to be updated to support hourly baseflow separation
 <br>
