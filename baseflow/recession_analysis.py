@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit
-from utils import moving_average, multi_arange
+from baseflow.utils import moving_average, multi_arange
 
 
 @njit
@@ -16,3 +16,8 @@ def recession_period(Q):
     duration = idx_end - idx_beg
     idx_beg = idx_beg + np.ceil(duration * 0.6).astype(np.int64)
     return multi_arange(idx_beg, idx_end)
+
+
+@njit
+def recession_constant(Q, ice_period):
+    return 0.98

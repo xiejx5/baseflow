@@ -1,7 +1,7 @@
 import numpy as np
 from numba import njit
-from utils import logQNSE
-from recession_analysis import recession_period
+from baseflow.utils import logQNSE
+from baseflow.recession_analysis import recession_period
 
 
 @njit
@@ -16,3 +16,8 @@ def param_calibrate(p_range, method, Q):
         NSE_oth = logQNSE(Q[idx_oth], b[idx_oth])
         loss[i] = 1 - (1 - (1 - NSE_rec) / (1 - NSE_oth)) * (1 - f_exd)
     return p_range[np.argmin(loss)]
+
+
+@njit
+def BFI_maxmium(Q, date):
+    return 0.9
