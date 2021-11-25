@@ -145,6 +145,7 @@ logs/
 wandb/
 cache/
 outdate/
+figs/
 fig*.py
 main.py
 .env

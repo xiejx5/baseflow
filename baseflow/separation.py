@@ -1,7 +1,6 @@
 import numpy as np
 from baseflow.methods import *
-from baseflow.recession_analysis import recession_constant
-from baseflow.param_estimate import param_calibrate, BFI_maxmium
+from baseflow.param_estimate import recession_constant, BFI_maxmium, param_calibrate
 
 
 def separation(Q, date=None, area=None, ice_period=None, method='all'):

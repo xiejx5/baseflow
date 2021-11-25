@@ -14,17 +14,21 @@ def load_streamflow(path):
     date, Q = np.loadtxt(path, delimiter=',', skiprows=1, unpack=True,
                          dtype=[('date', 'datetime64[D]'), ('Q', float)],
                          converters={0: np.datetime64})
+    year = date.astype('datetime64[Y]').astype(int) + int(str(np.datetime64(0, 'Y')))
+    month = date.astype('datetime64[M]').astype(int) % 12 + 1
+    day = (date - date.astype('datetime64[M]')).astype(int) + 1
+    date = np.rec.fromarrays([year, month, day], dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
     return clean_streamflow(date, Q)
 
 
 def clean_streamflow(date, Q):
     Q[np.isnan(Q)] = 0
     Q = np.abs(Q)
-    year = date.astype('datetime64[Y]').astype(np.int64) + int(str(np.datetime64(0, 'Y')))
+    year = date['Y']
     year_unique = np.unique(year)
     year_delete = clean_streamflow_jit(year, year_unique, Q)
     idx_delete = np.isin(year, year_delete)
-    return date[~idx_delete], Q[~idx_delete]
+    return Q[~idx_delete], date[~idx_delete]
 
 
 @njit
