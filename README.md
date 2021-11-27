@@ -27,6 +27,11 @@ pip install baseflow
 ### Example
 ```python
 import baseflow
+
+path = f'{baseflow._path}/example.csv'
+Q, date = baseflow.load_streamflow(path)
+b, KGEs = baseflow.separation(Q, date, area=276)
+print(f'Best Method: {b.dtype.names[KGEs.argmax()]}')
 ```
 <br>
 
