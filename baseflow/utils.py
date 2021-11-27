@@ -40,7 +40,6 @@ def clean_streamflow_jit(year, year_unique, Q):
     return year_delete
 
 
-@njit
 def moving_average(x, w):
     res = np.convolve(x, np.ones(w)) / w
     return res[w - 1:-w + 1]
@@ -79,16 +78,8 @@ def multi_arange(starts, stops):
     return res
 
 
-def NSE(Q_obs, Q_sim):
-    SS_res = np.sum(np.square(Q_obs - Q_sim))
-    SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))
-    return (1 - SS_res / (SS_tot + np.finfo(float).eps))
-
-
 @njit
-def logQNSE(Q_obs, Q_sim):
-    Q_obs, Q_sim = np.clip(Q_obs, 1e-10, None), np.clip(Q_sim, 1e-10, None)
-    Q_obs, Q_sim = np.log10(Q_obs), np.log10(Q_sim)
+def NSE(Q_obs, Q_sim):
     SS_res = np.sum(np.square(Q_obs - Q_sim))
     SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))
     return (1 - SS_res / (SS_tot + 1e-10)) - 1e-10

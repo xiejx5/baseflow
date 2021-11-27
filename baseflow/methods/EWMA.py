@@ -3,7 +3,7 @@ from numba import njit
 
 
 @njit
-def EWMA(Q, e, return_exceed=False):
+def EWMA(Q, b_LH, e, return_exceed=False):
     """exponential weighted moving average (EWMA) filter (Tularam & Ilahee, 2008)
 
     Args:
@@ -14,7 +14,7 @@ def EWMA(Q, e, return_exceed=False):
         b = np.zeros(Q.shape[0] + 1)
     else:
         b = np.zeros(Q.shape[0])
-    b[0] = Q[0]
+    b[0] = b_LH[0]
     for i in range(Q.shape[0] - 1):
         b[i + 1] = (1 - e) * b[i] + e * Q[i + 1]
         if b[i + 1] > Q[i + 1]:

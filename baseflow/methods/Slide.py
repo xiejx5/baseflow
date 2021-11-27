@@ -1,24 +1,24 @@
 import numpy as np
-from numba import njit
+from numba import njit, prange
+from baseflow.methods.Local import hysep_interval
 
 
-@njit
-def Slide(Q, area, return_exceed=False):
+def Slide(Q, area):
     """Slide interval graphical method from HYSEP program (Sloto & Crouse, 1996)
 
     Args:
         Q (np.array): streamflow
         area (float): basin area in km^2
     """
-    if return_exceed:
-        b = np.zeros(Q.shape[0] + 1)
-    else:
-        b = np.zeros(Q.shape[0])
-    b[0] = Q[0]
-    for i in range(Q.shape[0] - 1):
-        b[i + 1] = (1 - e) * b[i] + e * Q[i + 1]
-        if b[i + 1] > Q[i + 1]:
-            b[i + 1] = Q[i + 1]
-            if return_exceed:
-                b[-1] += 1
+    inN = hysep_interval(area)
+    return Slide_interpolation(Q, inN)
+
+
+@njit(parallel=True)
+def Slide_interpolation(Q, inN):
+    b = np.zeros(Q.shape[0])
+    for i in prange(np.int64((inN - 1) / 2), np.int64(Q.shape[0] - (inN - 1) / 2)):
+        b[i] = np.min(Q[np.int64(i - (inN - 1) / 2):np.int64(i + (inN + 1) / 2)])
+    b[:np.int64((inN - 1) / 2)] = np.min(Q[:np.int64((inN - 1) / 2)])
+    b[np.int64(Q.shape[0] - (inN - 1) / 2):] = np.min(Q[np.int64(Q.shape[0] - (inN - 1) / 2):])
     return b

@@ -1,6 +1,7 @@
 import numpy as np
 from baseflow.methods import *
-from baseflow.param_estimate import recession_constant, BFI_maxmium, param_calibrate
+from baseflow.comparision import strict_baseflow, KGE
+from baseflow.param_estimate import recession_coefficient, maxmium_BFI, param_calibrate
 
 
 def separation(Q, date=None, area=None, ice_period=None, method='all'):
@@ -10,51 +11,55 @@ def separation(Q, date=None, area=None, ice_period=None, method='all'):
     elif isinstance(method, str):
         method = [method]
 
+    strict = strict_baseflow(Q)
     if any(m in ['Chapman', 'CM', 'Boughton', 'Furey', 'Eckhardt'] for m in method):
-        a = recession_constant(Q, ice_period)
+        a = recession_coefficient(Q, strict, date, ice_period)
 
-    b = np.zeros([Q.shape[0], len(method)])
-    i = 0
+    b_LH = LH(Q)
+    b = np.recarray(Q.shape[0], dtype=list(zip(method, [float] * len(method))))
     for m in method:
         if m == 'UKIH':
-            b[:, i] = UKIH(Q)
+            b[m] = UKIH(Q, b_LH)
 
         if m == 'Local':
-            b[:, i] = Local(Q, area)
+            b[m] = Local(Q, b_LH, area)
 
         if m == 'Fixed':
-            b[:, i] = Fixed(Q, area)
+            b[m] = Fixed(Q, area)
 
         if m == 'Slide':
-            b[:, i] = Slide(Q, area)
+            b[m] = Slide(Q, area)
 
         if m == 'LH':
-            b[:, i] = LH(Q)
+            b[m] = b_LH
 
         if m == 'Chapman':
-            b[:, i] = Chapman(Q, a)
+            b[m] = Chapman(Q, b_LH, a)
 
         if m == 'CM':
-            b[:, i] = CM(Q, a)
+            b[m] = CM(Q, b_LH, a)
 
         if m == 'Boughton':
-            C = param_calibrate(np.arange(0.0001, 1, 0.0001), Boughton, Q)
-            b[:, i] = Boughton(Q, a, C)
+            C = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Boughton(a), Q, b_LH)
+            b[m] = Boughton(Q, b_LH, a, C)
 
         if m == 'Furey':
-            A = param_calibrate(np.arange(0.001, 10, 0.001), Furey, Q)
-            b[:, i] = Furey(Q, a, A)
+            A = param_calibrate(np.arange(0.001, 10, 0.001), f_Furey(a), Q, b_LH)
+            b[m] = Furey(Q, b_LH, a, A)
 
         if m == 'Eckhardt':
-            BFImax = BFI_maxmium(Q, date)
-            b[:, i] = Eckhardt(Q, a, BFImax)
+            # BFImax = maxmium_BFI(Q, b_LH, a, date)
+            BFImax = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Eckhardt(a), Q, b_LH)
+            b[m] = Eckhardt(Q, b_LH, a, BFImax)
 
         if m == 'EWMA':
-            e = param_calibrate(np.arange(0.0001, 0.5, 0.0001), EWMA, Q)
-            b[:, i] = EWMA(Q, e)
+            e = param_calibrate(np.arange(0.0001, 0.5, 0.0001), EWMA, Q, b_LH)
+            b[m] = EWMA(Q, b_LH, e)
 
         if m == 'Willems':
-            w = param_calibrate(np.arange(0.0001, 1, 0.0001), Willems, Q)
-            b[:, i] = Willems(Q, a, w)
+            w = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Willems(a), Q, b_LH)
+            b[m] = Willems(Q, b_LH, a, w)
 
-    return b
+    KGEs = KGE(b[strict].view(np.float64).reshape(-1, len(method)),
+               np.repeat(Q[strict], len(method)).reshape(-1, len(method)))
+    return b, KGEs

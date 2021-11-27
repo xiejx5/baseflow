@@ -1,49 +1,74 @@
 import numpy as np
-from numba import njit
 
 
-def strict_baseflow(Q, date=None, ice_period=None):
-    Q90 = np.quantile(Q, 0.9)
-    Mons = date(: , 2)
-    Days = date(: , 3)
-    begin, terminal = ice_period
-    efc = (
-        (Mons > begin(1) & Mons < terminal(1)) | (
-            Mons == begin(1) & Days >= begin(2)) | (
-            Mons == terminal(1) & Days <= terminal(2)))
-    left_dQ = Q[1:] - Q[:-1]
-    left_dQ = left_dQ(1: len(left_dQ) - 1)
-    right_dQ = Q(3: end) - Q(2: end - 1)
+def strict_baseflow(Q):
+    dQ = (Q[2:] - Q[:-2]) / 2
 
-    dQ = (Q(1: end - 2) - Q(3: end)) / 2
+    # 1. flow data associated with positive and zero values of dy / dt
+    wet1 = np.concatenate([[True], dQ >= 0, [True]])
 
-    n = len(dQ)
-    cQ = Q(2: len(Q) - 1, 1)
+    # 2. previous 2 points before points with dy/dt≥0, as well as the next 3 points
+    idx_first = np.where(wet1[1:].astype(int) - wet1[:-1].astype(int) == 1)[0] + 1
+    idx_last = np.where(wet1[1:].astype(int) - wet1[:-1].astype(int) == -1)[0]
+    idx_before = np.repeat([idx_first], 2) - np.tile(range(1, 3), idx_first.shape)
+    idx_next = np.repeat([idx_last], 3) + np.tile(range(1, 4), idx_last.shape)
+    idx_remove = np.concatenate([idx_before, idx_next])
+    wet2 = np.full(Q.shape, False)
+    wet2[idx_remove.clip(min=0, max=Q.shape[0] - 1)] = True
 
-    wet1 = dQ <= 0
-    # flow data associated with positive and zero values of dy / dt
-    for i in range(1, 3):
-        wet1 = np.apply_along_axislogical([wet1(2:n, 1) true(1)] + wet1)
-    # two data point before a zero or new positive value of dy / dt
-    for i = 1:
-        3:
-        wet1 = np.apply_along_axislogical([true(1)
-                                           wet1(1:n - 1, 1)] + wet1)
-    # three data points after the last positive and zero dy / dt
+    # 3. five data points after major events (90th quantile)
+    growing = np.concatenate([[True], (Q[1:] - Q[:-1]) >= 0, [True]])
+    idx_major = np.where((Q >= np.quantile(Q, 0.9)) & growing[:-1] & ~growing[1:])[0]
+    idx_after = np.repeat([idx_major], 5) + np.tile(range(1, 6), idx_major.shape)
+    wet3 = np.full(Q.shape, False)
+    wet3[idx_after.clip(min=0, max=Q.shape[0] - 1)] = True
 
-    wet2 = (cQ >= Q90) & left_dQ >= 0 & right_dQ <= 0
-    for i = 1:
-        5
-        wet2 = np.apply_along_axislogical([0
-                                           wet2(1:n - 1, 1)] + wet2)
-    # five data points after major events(90th quantile)
+    # 4. flow data followed by a data point with a larger value of -dy / dt
+    wet4 = np.concatenate([[True], dQ[1:] - dQ[:-1] < 0, [True, True]])
 
-    wet3 = (dQ - [dQ(2:n)
-                  0]) < 0
-    # flow data followed by a data point with a larger value of - dy / dt
+    # dry points, namely strict baseflow
+    dry = ~(wet1 + wet2 + wet3 + wet4)
 
-    wet1 = np.apply_along_axislogical(wet1 + (~efc(2: len(efc) - 1)))
-    wet = np.apply_along_axislogical(wet1 + wet2 + wet3)
-    dry = np.apply_along_axislogical([0
-                                      ~wet
-                                      0])
+    return dry
+
+
+def KGE(simulations, evaluation):
+    """Original Kling-Gupta Efficiency (KGE) and its three components
+    (r, α, β) as per `Gupta et al., 2009
+    <https://doi.org/10.1016/j.jhydrol.2009.08.003>`_.
+    Note, all four values KGE, r, α, β are returned, in this order.
+    :Calculation Details:
+        .. math::
+           E_{\\text{KGE}} = 1 - \\sqrt{[r - 1]^2 + [\\alpha - 1]^2
+           + [\\beta - 1]^2}
+        .. math::
+           r = \\frac{\\text{cov}(e, s)}{\\sigma({e}) \\cdot \\sigma(s)}
+        .. math::
+           \\alpha = \\frac{\\sigma(s)}{\\sigma(e)}
+        .. math::
+           \\beta = \\frac{\\mu(s)}{\\mu(e)}
+        where *e* is the *evaluation* series, *s* is (one of) the
+        *simulations* series, *cov* is the covariance, *σ* is the
+        standard deviation, and *μ* is the arithmetic mean.
+    """
+    # calculate error in timing and dynamics r
+    # (Pearson's correlation coefficient)
+    sim_mean = np.mean(simulations, axis=0, dtype=np.float64)
+    obs_mean = np.mean(evaluation, axis=0, dtype=np.float64)
+
+    r_num = np.sum((simulations - sim_mean) * (evaluation - obs_mean),
+                   axis=0, dtype=np.float64)
+    r_den = np.sqrt(np.sum((simulations - sim_mean) ** 2,
+                           axis=0, dtype=np.float64)
+                    * np.sum((evaluation - obs_mean) ** 2,
+                             axis=0, dtype=np.float64))
+    r = r_num / (r_den + 1e-10)
+    # calculate error in spread of flow alpha
+    alpha = np.std(simulations, axis=0) / (np.std(evaluation, axis=0) + 1e-10)
+    # calculate error in volume beta (bias of mean discharge)
+    beta = (np.sum(simulations, axis=0, dtype=np.float64)
+            / (np.sum(evaluation, axis=0, dtype=np.float64) + 1e-10))
+    # calculate the Kling-Gupta Efficiency KGE
+    kge_ = 1 - np.sqrt((r - 1) ** 2 + (alpha - 1) ** 2 + (beta - 1) ** 2)
+
+    return kge_
