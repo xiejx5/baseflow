@@ -6,18 +6,24 @@ def load_streamflow(path):
     """load streamflow into memory
 
     Args:
-        path (str): path of streamflow csv file
+        path (str|DataFrame): path of streamflow csv file, or pandas DataFrame
 
     Returns:
         tuple: (date of np.datetime64, streamflow of float)
     """
-    date, Q = np.loadtxt(path, delimiter=',', skiprows=1, unpack=True,
-                         dtype=[('date', 'datetime64[D]'), ('Q', float)],
-                         converters={0: np.datetime64})
-    year = date.astype('datetime64[Y]').astype(int) + int(str(np.datetime64(0, 'Y')))
-    month = date.astype('datetime64[M]').astype(int) % 12 + 1
-    day = (date - date.astype('datetime64[M]')).astype(int) + 1
-    date = np.rec.fromarrays([year, month, day], dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
+    if isinstance(path, str):
+        date, Q = np.loadtxt(path, delimiter=',', skiprows=1, unpack=True,
+                             dtype=[('date', 'datetime64[D]'), ('Q', float)],
+                             converters={0: np.datetime64}, encoding='utf8')
+        year = date.astype('datetime64[Y]').astype(int) + int(str(np.datetime64(0, 'Y')))
+        month = date.astype('datetime64[M]').astype(int) % 12 + 1
+        day = (date - date.astype('datetime64[M]')).astype(int) + 1
+        date = np.rec.fromarrays([year, month, day], dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
+    else:
+        df_date = path.iloc[:, 0].astype('datetime64')
+        date = np.rec.fromarrays([df_date.dt.year, df_date.dt.month, df_date.dt.day],
+                                 dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
+        Q = path.iloc[:, 1].values.astype(float)
     return clean_streamflow(date, Q)
 
 

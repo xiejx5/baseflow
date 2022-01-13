@@ -18,7 +18,7 @@ URL = 'https://github.com/xiejx5/baseflow'
 EMAIL = 'xiejx5@gmail.com'
 AUTHOR = 'Cody James'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.0.2'
+VERSION = '0.0.4'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -106,6 +106,7 @@ setup(
     url=URL,
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    package_data={"baseflow": ["example.csv"]},
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['baseflow'],
 
@@ -114,7 +115,7 @@ setup(
     # },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
-    include_package_data=True,
+    # include_package_data=True,
     license='MIT',
     classifiers=[
         # Trove classifiers
