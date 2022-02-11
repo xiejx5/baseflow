@@ -66,3 +66,8 @@ The directory structure of baseflow looks like this:
 1. The current version only applies to the daily scale
 2. The package needs to be updated to support hourly baseflow separation
 <br>
+
+## 🚀&nbsp;&nbsp;Publications
+
+### The following article details the 11 baseflow separation methods and their evaluation criterion.
+- Xie, J., Liu, X., Wang, K., Yang, T., Liang, K., & Liu, C. (2020). Evaluation of typical methods for baseflow separation in the contiguous United States. Journal of Hydrology, 583, 124628. https://doi.org/10.1016/j.jhydrol.2020.124628
