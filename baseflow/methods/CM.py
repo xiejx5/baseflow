@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit(fastmath=True)
+@njit
 def CM(Q, b_LH, a, return_exceed=False):
     """CM filter (Chapman & Maxwell, 1996)
 

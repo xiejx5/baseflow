@@ -33,7 +33,7 @@ def param_calibrate(param_range, method, Q, b_LH):
     return param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth)
 
 
-@njit(fastmath=True)
+@njit
 def param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth):
     logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)
@@ -82,7 +82,7 @@ def maxmium_BFI(Q, b_LH, a, date=None):
     return BFI_max
 
 
-@njit(fastmath=True)
+@njit
 def Backward(Q, b_LH, a):
     b = np.zeros(Q.shape[0])
     b[-1] = b_LH[-1]

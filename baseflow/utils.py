@@ -40,7 +40,7 @@ def clean_streamflow(date, Q):
     return Q[~idx_delete], date[~idx_delete]
 
 
-@njit(fastmath=True)
+@njit
 def clean_streamflow_jit(year, year_unique, Q):
     year_delete = []
     for y in year_unique:
@@ -54,7 +54,7 @@ def moving_average(x, w):
     return res[w - 1:-w + 1]
 
 
-@njit(fastmath=True)
+@njit
 def multi_arange_steps(starts, stops, steps):
     pos = 0
     cnt = np.sum((stops - starts + steps - np.sign(steps)) // steps, dtype=np.int64)
@@ -75,7 +75,7 @@ def multi_arange_steps(starts, stops, steps):
     return res
 
 
-@njit(fastmath=True)
+@njit
 def multi_arange(starts, stops):
     pos = 0
     cnt = np.sum(stops - starts, dtype=np.int64)
@@ -87,7 +87,7 @@ def multi_arange(starts, stops):
     return res
 
 
-@njit(fastmath=True)
+@njit
 def NSE(Q_obs, Q_sim):
     SS_res = np.sum(np.square(Q_obs - Q_sim))
     SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))

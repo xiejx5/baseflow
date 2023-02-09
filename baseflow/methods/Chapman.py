@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit(fastmath=True)
+@njit
 def Chapman(Q, b_LH, a, return_exceed=False):
     """Chapman filter (Chapman, 1991)
 

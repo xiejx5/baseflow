@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit(fastmath=True)
+@njit
 def LH(Q, beta=0.925, return_exceed=False):
     """LH digital filter (Lyne & Hollick, 1979)
 
