@@ -33,7 +33,7 @@ def param_calibrate(param_range, method, Q, b_LH):
     return param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth)
 
 
-@njit(parallel=True)
+@njit(parallel=False)
 def param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth):
     logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)

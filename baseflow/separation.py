@@ -1,7 +1,7 @@
 import numpy as np
 from baseflow.methods import *
 from baseflow.comparision import strict_baseflow, KGE
-from baseflow.param_estimate import recession_coefficient, param_calibrate
+from baseflow.param_estimate import recession_coefficient, param_calibrate, maxmium_BFI
 
 
 def separation(Q, date=None, area=None, ice_period=None, method='all'):
@@ -42,24 +42,24 @@ def separation(Q, date=None, area=None, ice_period=None, method='all'):
             b[m] = CM(Q, b_LH, a)
 
         if m == 'Boughton':
-            C = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Boughton(a), Q, b_LH)
+            C = param_calibrate(np.arange(0.0001, 0.1, 0.0001), f_Boughton(a), Q, b_LH)
             b[m] = Boughton(Q, b_LH, a, C)
 
         if m == 'Furey':
-            A = param_calibrate(np.arange(0.001, 10, 0.001), f_Furey(a), Q, b_LH)
+            A = param_calibrate(np.arange(0.01, 10, 0.01), f_Furey(a), Q, b_LH)
             b[m] = Furey(Q, b_LH, a, A)
 
         if m == 'Eckhardt':
             # BFImax = maxmium_BFI(Q, b_LH, a, date)
-            BFImax = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Eckhardt(a), Q, b_LH)
+            BFImax = param_calibrate(np.arange(0.001, 1, 0.001), f_Eckhardt(a), Q, b_LH)
             b[m] = Eckhardt(Q, b_LH, a, BFImax)
 
         if m == 'EWMA':
-            e = param_calibrate(np.arange(0.0001, 0.5, 0.0001), EWMA, Q, b_LH)
+            e = param_calibrate(np.arange(0.0001, 0.1, 0.0001), EWMA, Q, b_LH)
             b[m] = EWMA(Q, b_LH, e)
 
         if m == 'Willems':
-            w = param_calibrate(np.arange(0.0001, 1, 0.0001), f_Willems(a), Q, b_LH)
+            w = param_calibrate(np.arange(0.001, 1, 0.001), f_Willems(a), Q, b_LH)
             b[m] = Willems(Q, b_LH, a, w)
 
     KGEs = KGE(b[strict].view(np.float64).reshape(-1, len(method)),

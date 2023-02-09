@@ -19,7 +19,7 @@ def UKIH(Q, b_LH, return_exceed=False):
     return b
 
 
-@njit(parallel=True)
+@njit(parallel=False)
 def UKIH_turn(Q, idx_min):
     idx_turn = np.zeros(idx_min.shape[0], dtype=np.int64)
     for i in prange(idx_min.shape[0] - 2):

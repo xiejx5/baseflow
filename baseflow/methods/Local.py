@@ -34,7 +34,7 @@ def hysep_interval(area):
     return inN
 
 
-@njit(parallel=True)
+@njit(parallel=False)
 def Local_turn(Q, inN):
     idx_turn = np.zeros(Q.shape[0], dtype=np.int64)
     for i in prange(np.int64((inN - 1) / 2), np.int64(Q.shape[0] - (inN - 1) / 2)):

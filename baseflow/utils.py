@@ -19,11 +19,15 @@ def load_streamflow(path):
         month = date.astype('datetime64[M]').astype(int) % 12 + 1
         day = (date - date.astype('datetime64[M]')).astype(int) + 1
         date = np.rec.fromarrays([year, month, day], dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
-    else:
+    elif len(path.shape) > 1:
         df_date = path.iloc[:, 0].astype('datetime64')
         date = np.rec.fromarrays([df_date.dt.year, df_date.dt.month, df_date.dt.day],
                                  dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
         Q = path.iloc[:, 1].values.astype(float)
+    else:
+        date = np.rec.fromarrays([path.index.year, path.index.month, path.index.day],
+                                 dtype=[('Y', 'i4'), ('M', 'i4'), ('D', 'i4')])
+        Q = path.values.astype(float)
     return clean_streamflow(date, Q)
 
 
@@ -32,7 +36,7 @@ def clean_streamflow(date, Q):
     year = date['Y']
     year_unique = np.unique(year)
     year_delete = clean_streamflow_jit(year, year_unique, Q)
-    idx_delete = np.isin(year, year_delete)
+    idx_delete = np.isin(year, year_delete) | np.isnan(Q)
     return Q[~idx_delete], date[~idx_delete]
 
 
