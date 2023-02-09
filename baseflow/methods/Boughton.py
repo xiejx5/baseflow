@@ -23,10 +23,3 @@ def Boughton(Q, b_LH, a, C, return_exceed=False):
             if return_exceed:
                 b[-1] += 1
     return b
-
-
-def f_Boughton(a):
-    @njit
-    def _Boughton(Q, b_LH, C, return_exceed=False):
-        return Boughton(Q, b_LH, a, C, return_exceed=return_exceed)
-    return _Boughton

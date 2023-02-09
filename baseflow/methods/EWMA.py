@@ -3,7 +3,7 @@ from numba import njit
 
 
 @njit
-def EWMA(Q, b_LH, e, return_exceed=False):
+def EWMA(Q, b_LH, a, e, return_exceed=False):
     """exponential weighted moving average (EWMA) filter (Tularam & Ilahee, 2008)
 
     Args:

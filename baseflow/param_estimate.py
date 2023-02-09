@@ -26,20 +26,20 @@ def recession_coefficient(Q, strict, date=None, ice_period=None):
     return np.exp(-1 / K)
 
 
-def param_calibrate(param_range, method, Q, b_LH):
+def param_calibrate(param_range, method, Q, b_LH, a):
     idx_rec = recession_period(Q)
     idx_oth = np.full(Q.shape[0], True)
     idx_oth[idx_rec] = False
-    return param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth)
+    return param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth)
 
 
 @njit
-def param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth):
+def param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth):
     logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)
     for i in prange(param_range.shape[0]):
         p = param_range[i]
-        b_exceed = method(Q, b_LH, p, return_exceed=True)
+        b_exceed = method(Q, b_LH, a, p, return_exceed=True)
         f_exd, logb = b_exceed[-1] / Q.shape[0], np.log1p(b_exceed[:-1])
         NSE_rec = NSE(logQ[idx_rec], logb[idx_rec])
         NSE_oth = NSE(logQ[idx_oth], logb[idx_oth])

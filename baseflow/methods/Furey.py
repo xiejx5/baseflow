@@ -23,10 +23,3 @@ def Furey(Q, b_LH, a, A, return_exceed=False):
             if return_exceed:
                 b[-1] += 1
     return b
-
-
-def f_Furey(a):
-    @njit
-    def _Furey(Q, b_LH, A, return_exceed=False):
-        return Furey(Q, b_LH, a, A, return_exceed=return_exceed)
-    return _Furey

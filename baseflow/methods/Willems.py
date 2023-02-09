@@ -25,10 +25,3 @@ def Willems(Q, b_LH, a, w, return_exceed=False):
             if return_exceed:
                 b[-1] += 1
     return b
-
-
-def f_Willems(a):
-    @njit
-    def _Willems(Q, b_LH, w, return_exceed=False):
-        return Willems(Q, b_LH, a, w, return_exceed=return_exceed)
-    return _Willems

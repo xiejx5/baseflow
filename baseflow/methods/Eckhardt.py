@@ -23,10 +23,3 @@ def Eckhardt(Q, b_LH, a, BFImax, return_exceed=False):
             if return_exceed:
                 b[-1] += 1
     return b
-
-
-def f_Eckhardt(a):
-    @njit
-    def _Eckhardt(Q, b_LH, BFImax, return_exceed=False):
-        return Eckhardt(Q, b_LH, a, BFImax, return_exceed=return_exceed)
-    return _Eckhardt
