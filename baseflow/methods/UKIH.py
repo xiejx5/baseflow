@@ -19,7 +19,7 @@ def UKIH(Q, b_LH, return_exceed=False):
     return b
 
 
-@njit(parallel=False)
+@njit(fastmath=True)
 def UKIH_turn(Q, idx_min):
     idx_turn = np.zeros(idx_min.shape[0], dtype=np.int64)
     for i in prange(idx_min.shape[0] - 2):
@@ -29,7 +29,7 @@ def UKIH_turn(Q, idx_min):
     return idx_turn[idx_turn != 0]
 
 
-@njit
+@njit(fastmath=True)
 def linear_interpolation(Q, idx_turn, return_exceed=False):
     if return_exceed:
         b = np.zeros(Q.shape[0] + 1)

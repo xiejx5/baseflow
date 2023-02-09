@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit
+@njit(fastmath=True)
 def Eckhardt(Q, b_LH, a, BFImax, return_exceed=False):
     """Eckhardt filter (Eckhardt, 2005)
 
@@ -26,7 +26,6 @@ def Eckhardt(Q, b_LH, a, BFImax, return_exceed=False):
 
 
 def f_Eckhardt(a):
-    @njit
     def _Eckhardt(Q, b_LH, BFImax, return_exceed=False):
         return Eckhardt(Q, b_LH, a, BFImax, return_exceed=return_exceed)
     return _Eckhardt

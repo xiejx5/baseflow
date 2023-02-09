@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit
+@njit(fastmath=True)
 def Boughton(Q, b_LH, a, C, return_exceed=False):
     """Boughton doulbe-parameter filter (Boughton, 2004)
 
@@ -26,7 +26,6 @@ def Boughton(Q, b_LH, a, C, return_exceed=False):
 
 
 def f_Boughton(a):
-    @njit
     def _Boughton(Q, b_LH, C, return_exceed=False):
         return Boughton(Q, b_LH, a, C, return_exceed=return_exceed)
     return _Boughton

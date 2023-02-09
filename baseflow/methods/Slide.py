@@ -14,7 +14,7 @@ def Slide(Q, area):
     return Slide_interpolation(Q, inN)
 
 
-@njit(parallel=False)
+@njit(fastmath=True)
 def Slide_interpolation(Q, inN):
     b = np.zeros(Q.shape[0])
     for i in prange(np.int64((inN - 1) / 2), np.int64(Q.shape[0] - (inN - 1) / 2)):

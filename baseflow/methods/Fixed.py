@@ -14,7 +14,7 @@ def Fixed(Q, area=None):
     return Fixed_interpolation(Q, inN)
 
 
-@njit(parallel=False)
+@njit(fastmath=True)
 def Fixed_interpolation(Q, inN):
     b = np.zeros(Q.shape[0])
     n = Q.shape[0] // inN

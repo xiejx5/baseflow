@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 
-@njit
+@njit(fastmath=True)
 def Willems(Q, b_LH, a, w, return_exceed=False):
     """digital filter (Willems, 2009)
 
@@ -28,7 +28,6 @@ def Willems(Q, b_LH, a, w, return_exceed=False):
 
 
 def f_Willems(a):
-    @njit
     def _Willems(Q, b_LH, w, return_exceed=False):
         return Willems(Q, b_LH, a, w, return_exceed=return_exceed)
     return _Willems
