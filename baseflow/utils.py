@@ -28,7 +28,6 @@ def load_streamflow(path):
 
 
 def clean_streamflow(date, Q):
-    Q[np.isnan(Q)] = 0
     Q = np.abs(Q)
     year = date['Y']
     year_unique = np.unique(year)
