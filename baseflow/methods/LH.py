@@ -16,7 +16,7 @@ def LH(Q, beta=0.925, return_exceed=False):
         b = np.zeros(Q.shape[0])
 
     # first pass
-    b[0] = Q[0] / 2
+    b[0] = Q[0]
     for i in range(Q.shape[0] - 1):
         b[i + 1] = beta * b[i] + (1 - beta) / 2 * (Q[i] + Q[i + 1])
         if b[i + 1] > Q[i + 1]:
@@ -28,8 +28,8 @@ def LH(Q, beta=0.925, return_exceed=False):
     b1 = np.copy(b)
     for i in range(Q.shape[0] - 2, -1, -1):
         b[i] = beta * b[i + 1] + (1 - beta) / 2 * (b1[i + 1] + b1[i])
-        if b[i] > Q[i]:
-            b[i] = Q[i]
+        if b[i] > b1[i]:
+            b[i] = b1[i]
             if return_exceed:
                 b[-1] += 1
     return b

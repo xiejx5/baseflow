@@ -35,12 +35,12 @@ def param_calibrate(param_range, method, Q, b_LH):
 
 @njit(parallel=True)
 def param_calibrate_jit(param_range, method, Q, b_LH, idx_rec, idx_oth):
-    logQ = np.log(Q + 1)
+    logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)
     for i in prange(param_range.shape[0]):
         p = param_range[i]
         b_exceed = method(Q, b_LH, p, return_exceed=True)
-        f_exd, logb = b_exceed[-1] / Q.shape[0], np.log(b_exceed[:-1] + 1)
+        f_exd, logb = b_exceed[-1] / Q.shape[0], np.log1p(b_exceed[:-1])
         NSE_rec = NSE(logQ[idx_rec], logb[idx_rec])
         NSE_oth = NSE(logQ[idx_oth], logb[idx_oth])
         loss[i] = 1 - (1 - (1 - NSE_rec) / (1 - NSE_oth)) * (1 - f_exd)

@@ -1,10 +1,12 @@
 import numpy as np
 from baseflow.methods import *
 from baseflow.comparision import strict_baseflow, KGE
-from baseflow.param_estimate import recession_coefficient, maxmium_BFI, param_calibrate
+from baseflow.param_estimate import recession_coefficient, param_calibrate
 
 
 def separation(Q, date=None, area=None, ice_period=None, method='all'):
+    Q = np.array(Q)
+
     if method == 'all':
         method = ['UKIH', 'Local', 'Fixed', 'Slide', 'LH', 'Chapman',
                   'CM', 'Boughton', 'Furey', 'Eckhardt', 'EWMA', 'Willems']
