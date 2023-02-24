@@ -49,6 +49,25 @@ def clean_streamflow_jit(year, year_unique, Q):
     return year_delete
 
 
+def exist_ice(date, ice_period):
+    if (date is None) or (ice_period is None):
+        return None
+
+    if isinstance(ice_period, np.ndarray):
+        return np.isin(date.M, np.where(ice_period)[0] + 1)
+
+    beg, end = ice_period
+    if (end[0] > beg[0]) or ((end[0] == beg[0]) & (end[1] > beg[1])):
+        ice = (((date.M > beg[0]) & (date.M < end[0])) |
+               ((date.M == beg[0]) & (date.D >= beg[1])) |
+               ((date.M == end[0]) & (date.D <= end[1])))
+    else:
+        ice = (((date.M > beg[0]) | (date.M < end[0])) |
+               ((date.M == beg[0]) & (date.D >= beg[1])) |
+               ((date.M == end[0]) & (date.D <= end[1])))
+    return ice
+
+
 def moving_average(x, w):
     res = np.convolve(x, np.ones(w)) / w
     return res[w - 1:-w + 1]

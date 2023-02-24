@@ -3,23 +3,9 @@ from numba import njit, prange
 from baseflow.utils import NSE, moving_average, multi_arange
 
 
-def recession_coefficient(Q, strict, date=None, ice_period=None):
-    if ice_period is None:
-        idx_ice = np.full(Q.shape, False)
-    else:
-        beg, end = ice_period
-        if (end[0] > beg[0]) or ((end[0] == beg[0]) & (end[1] > beg[1])):
-            idx_ice = ((date.M > beg[0]) & (date.M < end[0]) |
-                       ((date.M == beg[0]) & (date.D >= beg[1])) |
-                       ((date.M == end[0]) & (date.D <= end[1])))
-        else:
-            idx_ice = ((date.M > beg[0]) | (date.M < end[0]) |
-                       ((date.M == beg[0]) & (date.D >= beg[1])) |
-                       ((date.M == end[0]) & (date.D <= end[1])))
-    dry = strict[~idx_ice]
-
+def recession_coefficient(Q, strict):
     cQ, dQ = Q[1:-1], (Q[2:] - Q[:-2]) / 2
-    cQ, dQ = cQ[dry[1:-1]], dQ[dry[1:-1]]
+    cQ, dQ = cQ[strict[1:-1]], dQ[strict[1:-1]]
 
     idx = np.argsort(-dQ / cQ)[np.floor(dQ.shape[0] * 0.05).astype(int)]
     K = - cQ[idx] / dQ[idx]

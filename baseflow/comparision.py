@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def strict_baseflow(Q):
+def strict_baseflow(Q, ice=None):
     dQ = (Q[2:] - Q[:-2]) / 2
 
     # 1. flow data associated with positive and zero values of dy / dt
@@ -28,6 +28,10 @@ def strict_baseflow(Q):
 
     # dry points, namely strict baseflow
     dry = ~(wet1 + wet2 + wet3 + wet4)
+
+   # avoid ice conditions which invalidate the groundwater-baseflow relationship
+    if ice is not None:
+        dry[ice] = False
 
     return dry
 

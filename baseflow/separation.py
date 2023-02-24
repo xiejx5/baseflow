@@ -1,10 +1,11 @@
 import numpy as np
 from baseflow.methods import *
+from baseflow.utils import exist_ice
 from baseflow.comparision import strict_baseflow, KGE
 from baseflow.param_estimate import recession_coefficient, param_calibrate, maxmium_BFI
 
 
-def separation(Q, date=None, area=None, ice_period=None, method='all'):
+def separation(Q, date=None, area=None, ice=None, method='all'):
     Q = np.array(Q)
 
     if method == 'all':
@@ -13,9 +14,12 @@ def separation(Q, date=None, area=None, ice_period=None, method='all'):
     elif isinstance(method, str):
         method = [method]
 
-    strict = strict_baseflow(Q)
+    # convert ice_period ([11, 1], [3, 31]) to bool array
+    if not isinstance(ice, np.ndarray):
+        ice = exist_ice(date, ice)
+    strict = strict_baseflow(Q, ice)
     if any(m in ['Chapman', 'CM', 'Boughton', 'Furey', 'Eckhardt', 'Willems'] for m in method):
-        a = recession_coefficient(Q, strict, date, ice_period)
+        a = recession_coefficient(Q, strict)
 
     b_LH = LH(Q)
     b = np.recarray(Q.shape[0], dtype=list(zip(method, [float] * len(method))))
