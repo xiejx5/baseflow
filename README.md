@@ -9,7 +9,7 @@ An open-source Python package for baseflow separation 🔥<br>
 
 <div align="center">
 
-Figure Here
+![Global Baseflow Index Distribution from 12 Separation Methods](https://user-images.githubusercontent.com/29588684/226364211-3fd46152-3b9a-4de9-8d77-f1b59747a0f4.jpg)
 
 </div>
 <br>
