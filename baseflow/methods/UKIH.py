@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit
+from numba import njit, prange
 
 
 def UKIH(Q, b_LH, return_exceed=False):
@@ -22,7 +22,7 @@ def UKIH(Q, b_LH, return_exceed=False):
 @njit
 def UKIH_turn(Q, idx_min):
     idx_turn = np.zeros(idx_min.shape[0], dtype=np.int64)
-    for i in range(idx_min.shape[0] - 2):
+    for i in prange(idx_min.shape[0] - 2):
         if ((0.9 * Q[idx_min[i + 1]] < Q[idx_min[i]]) &
                 (0.9 * Q[idx_min[i + 1]] < Q[idx_min[i + 2]])):
             idx_turn[i] = idx_min[i + 1]

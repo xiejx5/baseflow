@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit
+from numba import njit, prange
 from baseflow.utils import NSE, moving_average, multi_arange
 
 
@@ -23,7 +23,7 @@ def param_calibrate(param_range, method, Q, b_LH, a):
 def param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth):
     logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)
-    for i in range(param_range.shape[0]):
+    for i in prange(param_range.shape[0]):
         p = param_range[i]
         b_exceed = method(Q, b_LH, a, p, return_exceed=True)
         f_exd, logb = b_exceed[-1] / Q.shape[0], np.log1p(b_exceed[:-1])

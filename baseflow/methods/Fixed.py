@@ -1,5 +1,5 @@
 import numpy as np
-from numba import njit
+from numba import njit, prange
 from baseflow.methods.Local import hysep_interval
 
 
@@ -18,7 +18,7 @@ def Fixed(Q, area=None):
 def Fixed_interpolation(Q, inN):
     b = np.zeros(Q.shape[0])
     n = Q.shape[0] // inN
-    for i in range(n):
+    for i in prange(n):
         b[inN * i:inN * (i + 1)] = np.min(Q[inN * i:inN * (i + 1)])
     if n * inN != Q.shape[0]:
         b[n * inN:] = np.min(Q[n * inN:])
