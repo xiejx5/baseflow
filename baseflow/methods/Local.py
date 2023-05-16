@@ -11,6 +11,8 @@ def Local(Q, b_LH, area=None, return_exceed=False):
         area (float): basin area in km^2
     """
     idx_turn = Local_turn(Q, hysep_interval(area))
+    if idx_turn.shape[0] < 3:
+        raise IndexError('Less than 3 turning points found')
     b = linear_interpolation(Q, idx_turn, return_exceed=return_exceed)
     b[:idx_turn[0]] = b_LH[:idx_turn[0]]
     b[idx_turn[-1] + 1:] = b_LH[idx_turn[-1] + 1:]

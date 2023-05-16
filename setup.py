@@ -18,16 +18,16 @@ URL = 'https://github.com/xiejx5/baseflow'
 EMAIL = 'xiejx5@gmail.com'
 AUTHOR = 'Cody James'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.0.7'
+VERSION = '0.0.8'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'numpy', 'numba',
+    'numpy', 'numba', 'tqdm', 'pandas'
 ]
 
 # What packages are optional?
 EXTRAS = {
-    'fancy feature': ['pandas', 'matplotlib', 'scipy'],
+    'fancy feature': ['matplotlib', 'scipy'],
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -106,7 +106,7 @@ setup(
     url=URL,
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    package_data={"baseflow": ["example.csv"]},
+    package_data={"baseflow": ["example.csv", "thawed.npz"]},
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['baseflow'],
 

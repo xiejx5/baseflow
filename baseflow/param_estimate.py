@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit, prange
-from baseflow.utils import NSE, moving_average, multi_arange
+from baseflow.utils import moving_average, multi_arange
 
 
 def recession_coefficient(Q, strict):
@@ -19,7 +19,7 @@ def param_calibrate(param_range, method, Q, b_LH, a):
     return param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth)
 
 
-@njit
+@njit(parallel=True)
 def param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth):
     logQ = np.log1p(Q)
     loss = np.zeros(param_range.shape)
@@ -27,8 +27,19 @@ def param_calibrate_jit(param_range, method, Q, b_LH, a, idx_rec, idx_oth):
         p = param_range[i]
         b_exceed = method(Q, b_LH, a, p, return_exceed=True)
         f_exd, logb = b_exceed[-1] / Q.shape[0], np.log1p(b_exceed[:-1])
-        NSE_rec = NSE(logQ[idx_rec], logb[idx_rec])
-        NSE_oth = NSE(logQ[idx_oth], logb[idx_oth])
+
+        # NSE for recession part
+        Q_obs, Q_sim = logQ[idx_rec], logb[idx_rec]
+        SS_res = np.sum(np.square(Q_obs - Q_sim))
+        SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))
+        NSE_rec = (1 - SS_res / (SS_tot + 1e-10)) - 1e-10
+
+        # NSE for other part
+        Q_obs, Q_sim = logQ[idx_oth], logb[idx_oth]
+        SS_res = np.sum(np.square(Q_obs - Q_sim))
+        SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))
+        NSE_oth = (1 - SS_res / (SS_tot + 1e-10)) - 1e-10
+
         loss[i] = 1 - (1 - (1 - NSE_rec) / (1 - NSE_oth)) * (1 - f_exd)
     return param_range[np.argmin(loss)]
 

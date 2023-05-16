@@ -1,17 +1,18 @@
 import numpy as np
 from numba import njit
+from pathlib import Path
 
 
 def load_streamflow(path):
     """load streamflow into memory
 
     Args:
-        path (str|DataFrame): path of streamflow csv file, or pandas DataFrame
+        path (str|Path|DataFrame): path of streamflow csv file, or pandas DataFrame
 
     Returns:
         tuple: (date of np.datetime64, streamflow of float)
     """
-    if isinstance(path, str):
+    if isinstance(path, (str, Path)):
         date, Q = np.loadtxt(path, delimiter=',', skiprows=1, unpack=True,
                              dtype=[('date', 'datetime64[D]'), ('Q', float)],
                              converters={0: np.datetime64}, encoding='utf8')
@@ -32,21 +33,12 @@ def load_streamflow(path):
 
 
 def clean_streamflow(date, Q):
-    Q = np.abs(Q)
+    has_value = np.isfinite(Q)
+    date, Q = date[has_value], np.abs(Q[has_value])
     year = date['Y']
-    year_unique = np.unique(year)
-    year_delete = clean_streamflow_jit(year, year_unique, Q)
-    idx_delete = np.isin(year, year_delete) | np.isnan(Q)
-    return Q[~idx_delete], date[~idx_delete]
-
-
-@njit
-def clean_streamflow_jit(year, year_unique, Q):
-    year_delete = []
-    for y in year_unique:
-        if (Q[year == y] >= 0).sum() < 120:
-            year_delete.append(y)
-    return year_delete
+    year_unique, counts = np.unique(year, return_counts=True)
+    keep = np.isin(year, year_unique[counts >= 120])
+    return Q[keep], date[keep]
 
 
 def exist_ice(date, ice_period):
@@ -74,27 +66,6 @@ def moving_average(x, w):
 
 
 @njit
-def multi_arange_steps(starts, stops, steps):
-    pos = 0
-    cnt = np.sum((stops - starts + steps - np.sign(steps)) // steps, dtype=np.int64)
-    res = np.zeros((cnt,), dtype=np.int64)
-    for i in range(starts.size):
-        v, stop, step = starts[i], stops[i], steps[i]
-        if step > 0:
-            while v < stop:
-                res[pos] = v
-                pos += 1
-                v += step
-        elif step < 0:
-            while v > stop:
-                res[pos] = v
-                pos += 1
-                v += step
-    assert pos == cnt
-    return res
-
-
-@njit
 def multi_arange(starts, stops):
     pos = 0
     cnt = np.sum(stops - starts, dtype=np.int64)
@@ -106,8 +77,17 @@ def multi_arange(starts, stops):
     return res
 
 
-@njit
-def NSE(Q_obs, Q_sim):
-    SS_res = np.sum(np.square(Q_obs - Q_sim))
-    SS_tot = np.sum(np.square(Q_obs - np.mean(Q_obs)))
-    return (1 - SS_res / (SS_tot + 1e-10)) - 1e-10
+def geo2imagexy(x, y):
+    a = np.array([[0.5, 0.0], [0.0, -0.5]])
+    b = np.array([x - -180, y - 90])
+    col, row = np.linalg.solve(a, b) - 0.5
+    return np.round(col).astype(int), np.round(row).astype(int)
+
+
+def format_method(method):
+    if method == 'all':
+        method = ['UKIH', 'Local', 'Fixed', 'Slide', 'LH', 'Chapman',
+                  'CM', 'Boughton', 'Furey', 'Eckhardt', 'EWMA', 'Willems']
+    elif isinstance(method, str):
+        method = [method]
+    return method

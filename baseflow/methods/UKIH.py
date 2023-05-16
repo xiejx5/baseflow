@@ -13,6 +13,8 @@ def UKIH(Q, b_LH, return_exceed=False):
     idx_min = np.argmin(Q[:block_end].reshape(-1, N), axis=1)
     idx_min = idx_min + np.arange(0, block_end, N)
     idx_turn = UKIH_turn(Q, idx_min)
+    if idx_turn.shape[0] < 3:
+        raise IndexError('Less than 3 turning points found')
     b = linear_interpolation(Q, idx_turn, return_exceed=return_exceed)
     b[:idx_turn[0]] = b_LH[:idx_turn[0]]
     b[idx_turn[-1] + 1:] = b_LH[idx_turn[-1] + 1:]
