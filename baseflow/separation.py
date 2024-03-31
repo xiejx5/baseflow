@@ -8,7 +8,7 @@ from baseflow.utils import load_streamflow, exist_ice, geo2imagexy, format_metho
 from baseflow.param_estimate import recession_coefficient, param_calibrate, maxmium_BFI
 
 
-def separation(Q, date=None, area=None, ice=None, method='all', return_kge=True):
+def single(Q, date=None, area=None, ice=None, method='all', return_kge=True):
     Q = np.array(Q)
     method = format_method(method)
 
@@ -72,41 +72,60 @@ def separation(Q, date=None, area=None, ice=None, method='all', return_kge=True)
         return b, None
 
 
-def index(df, df_sta, method='all', return_kge=False):
-    # baseflow index worker
-    def index_work(idx):
+def separation(df, df_sta=None, method='all', return_bfi=False, return_kge=False):
+    # baseflow separation worker for single station
+    def sep_work(s):
         try:
-            c, r = geo2imagexy(df_sta.loc[idx, 'lon'], df_sta.loc[idx, 'lat'])
-            ice_period = ~thawed[:, r, c]
-            ice_period = ([11, 1], [3, 31]) if ice_period.all() else ice_period
-            Q, date = load_streamflow(df[idx])
-            ice = exist_ice(date, ice_period)
-            b, KGEs = separation(Q, ice=ice, area=df_sta.loc[idx, 'area'],
-                                 method=method, return_kge=return_kge)
-            df_bfi.loc[idx] = pd.DataFrame(b).sum() / Q.sum()
-            if KGEs is not None:
-                df_kge.loc[idx] = KGEs
+            Q, date = load_streamflow(df[s])
+            # read area, longitude, latitude from df_sta
+            area, ice = None, None
+            to_num = lambda col: (pd.to_numeric(df_sta.loc[s, col], errors='coerce')
+                                  if (df_sta is not None) and (col in df_sta.columns) else np.nan)
+            if np.isfinite(to_num('area')):
+                area = to_num('area')
+            if np.isfinite(to_num('lon')):
+                c, r = geo2imagexy(to_num('lon'), to_num('lat'))
+                ice_period = ~thawed[:, r, c]
+                ice_period = ([11, 1], [3, 31]) if ice_period.all() else ice_period
+                ice = exist_ice(date, ice_period)
+            # separate baseflow for station S
+            b, KGEs = single(Q, ice=ice, area=area, method=method, return_kge=return_kge)
+            # write into already created dataframe
+            date_idx = pd.to_datetime(pd.DataFrame(date).rename(
+                columns={'Y': 'year', 'M': 'month', 'D': 'day'}))
+            for m in method:
+                dfs[m].loc[date_idx, s] = b[m]
+            if return_bfi:
+                df_bfi.loc[s] = pd.DataFrame(b).sum() / Q.sum()
+            if return_kge:
+                df_kge.loc[s] = KGEs
         except BaseException:
             pass
 
-    # read thawed months
+    # thawed months from https://doi.org/10.5194/essd-9-133-2017
     with np.load(Path(__file__).parent / 'thawed.npz') as f:
         thawed = f['thawed']
 
-    # create df to store baseflow index
+    # create df to store baseflow
     method = format_method(method)
-    df_bfi = pd.DataFrame(-1, index=df_sta.index, columns=method, dtype=float)
+    dfs = {m: pd.DataFrame(np.nan, index=df.index, columns=df.columns, dtype=float)
+           for m in method}
 
-    # create df to store KGE
+    # create df to store BFI and KGE
+    if return_bfi:
+        df_bfi = pd.DataFrame(np.nan, index=df.columns, columns=method, dtype=float)
     if return_kge:
-        df_kge = pd.DataFrame(-1, index=df_sta.index, columns=method, dtype=float)
+        df_kge = pd.DataFrame(np.nan, index=df.columns, columns=method, dtype=float)
 
     # run separation for each column
-    for idx in tqdm(df_sta.index, total=df_sta.shape[0]):
-        index_work(idx)
+    for s in tqdm(df.columns, total=df.shape[1]):
+        sep_work(s)
 
     # return result
-    if return_kge:
-        return df_bfi, df_kge
-    else:
-        return df_bfi
+    if return_bfi and return_kge:
+        return dfs, df_bfi, df_kge
+    if return_bfi and not return_kge:
+        return dfs, df_bfi
+    if not return_bfi and return_kge:
+        return dfs, df_kge
+    return dfs
