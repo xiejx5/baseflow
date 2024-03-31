@@ -4,12 +4,12 @@ from tqdm import tqdm
 from pathlib import Path
 from baseflow.methods import *
 from baseflow.comparision import strict_baseflow, KGE
-from baseflow.utils import load_streamflow, exist_ice, geo2imagexy, format_method
+from baseflow.utils import clean_streamflow, exist_ice, geo2imagexy, format_method
 from baseflow.param_estimate import recession_coefficient, param_calibrate, maxmium_BFI
 
 
-def single(Q, date=None, area=None, ice=None, method='all', return_kge=True):
-    Q = np.array(Q)
+def single(series, area=None, ice=None, method='all', return_kge=True):
+    Q, date = clean_streamflow(series)
     method = format_method(method)
 
     # convert ice_period ([11, 1], [3, 31]) to bool array
@@ -20,7 +20,7 @@ def single(Q, date=None, area=None, ice=None, method='all', return_kge=True):
         a = recession_coefficient(Q, strict)
 
     b_LH = LH(Q)
-    b = np.recarray(Q.shape[0], dtype=list(zip(method, [float] * len(method))))
+    b = pd.DataFrame(np.nan, index=date, columns=method)
     for m in method:
         if m == 'UKIH':
             b[m] = UKIH(Q, b_LH)
@@ -65,8 +65,8 @@ def single(Q, date=None, area=None, ice=None, method='all', return_kge=True):
             b[m] = Willems(Q, b_LH, a, w)
 
     if return_kge:
-        KGEs = KGE(b[strict].view(np.float64).reshape(-1, len(method)),
-                   np.repeat(Q[strict], len(method)).reshape(-1, len(method)))
+        KGEs = pd.Series(KGE(b[strict].values, np.repeat(
+            Q[strict], len(method)).reshape(-1, len(method))), index=b.columns)
         return b, KGEs
     else:
         return b, None
@@ -76,7 +76,6 @@ def separation(df, df_sta=None, method='all', return_bfi=False, return_kge=False
     # baseflow separation worker for single station
     def sep_work(s):
         try:
-            Q, date = load_streamflow(df[s])
             # read area, longitude, latitude from df_sta
             area, ice = None, None
             to_num = lambda col: (pd.to_numeric(df_sta.loc[s, col], errors='coerce')
@@ -85,22 +84,23 @@ def separation(df, df_sta=None, method='all', return_bfi=False, return_kge=False
                 area = to_num('area')
             if np.isfinite(to_num('lon')):
                 c, r = geo2imagexy(to_num('lon'), to_num('lat'))
-                ice_period = ~thawed[:, r, c]
-                ice_period = ([11, 1], [3, 31]) if ice_period.all() else ice_period
-                ice = exist_ice(date, ice_period)
+                ice = ~thawed[:, r, c]
+                ice = ([11, 1], [3, 31]) if ice.all() else ice
             # separate baseflow for station S
-            b, KGEs = single(Q, ice=ice, area=area, method=method, return_kge=return_kge)
+            b, KGEs = single(df[s], ice=ice, area=area, method=method, return_kge=return_kge)
             # write into already created dataframe
-            date_idx = pd.to_datetime(pd.DataFrame(date).rename(
-                columns={'Y': 'year', 'M': 'month', 'D': 'day'}))
             for m in method:
-                dfs[m].loc[date_idx, s] = b[m]
+                dfs[m].loc[b.index, s] = b[m]
             if return_bfi:
-                df_bfi.loc[s] = pd.DataFrame(b).sum() / Q.sum()
+                df_bfi.loc[s] = b.sum() / df.loc[b.index, s].abs().sum()
             if return_kge:
                 df_kge.loc[s] = KGEs
         except BaseException:
             pass
+
+    # convert index to datetime
+    if not isinstance(df.index, pd.DatetimeIndex):
+        df.index = pd.to_datetime(df.index)
 
     # thawed months from https://doi.org/10.5194/essd-9-133-2017
     with np.load(Path(__file__).parent / 'thawed.npz') as f:

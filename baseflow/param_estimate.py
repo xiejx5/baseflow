@@ -67,7 +67,7 @@ def maxmium_BFI(Q, b_LH, a, date=None):
         annual_Q = np.mean(Q[:idx_end].reshape(-1, 365), axis=1)
         annual_BFI = annual_b / annual_Q
     else:
-        idx_year = date.Y - date.Y.min()
+        idx_year = date.year - date.year.min()
         counts = np.bincount(idx_year)
         idx_valid = counts > 0
         annual_b = np.bincount(idx_year, weights=b)[idx_valid] / counts[idx_valid]

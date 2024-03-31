@@ -27,10 +27,13 @@ pip install baseflow
 ### Example
 ```python
 import baseflow
+import pandas as pd
 
-Q, date = baseflow.load_streamflow(baseflow.example)
-b, KGEs = baseflow.separation(Q, date, area=276)
-print(f'Best Method: {b.dtype.names[KGEs.argmax()]}')
+df = pd.read_csv(baseflow.example, index_col=0)
+df_sta = pd.DataFrame(data=[[30, -28.4, 659], [-109.4, 33, 1611]],
+                      index=df.columns, columns=['lon', 'lat', 'area'])
+dfs, df_kge = baseflow.separation(df, df_sta, return_kge=True)
+print(f'Best Method:\n{df_kge.idxmax(axis=1)}')
 ```
 <br>
 
@@ -68,5 +71,5 @@ The directory structure of baseflow looks like this:
 
 ## 🚀&nbsp;&nbsp;Publications
 
-### The following articles detail the 12 baseflow separation methods and their evaluation criterion.
+### The following articles detail the baseflow separation methods and their evaluation criterion.
 - Xie, J., Liu, X., Wang, K., Yang, T., Liang, K., & Liu, C. (2020). Evaluation of typical methods for baseflow separation in the contiguous United States. Journal of Hydrology, 583, 124628. https://doi.org/10.1016/j.jhydrol.2020.124628
