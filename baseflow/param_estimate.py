@@ -8,7 +8,7 @@ def recession_coefficient(Q, strict):
     cQ, dQ = cQ[strict[1:-1]], dQ[strict[1:-1]]
 
     idx = np.argsort(-dQ / cQ)[np.floor(dQ.shape[0] * 0.05).astype(int)]
-    K = - cQ[idx] / dQ[idx]
+    K = -cQ[idx] / dQ[idx]
     return np.exp(-1 / K)
 
 

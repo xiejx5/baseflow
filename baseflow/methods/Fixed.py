@@ -19,7 +19,7 @@ def Fixed_interpolation(Q, inN):
     b = np.zeros(Q.shape[0])
     n = Q.shape[0] // inN
     for i in prange(n):
-        b[inN * i:inN * (i + 1)] = np.min(Q[inN * i:inN * (i + 1)])
+        b[inN * i : inN * (i + 1)] = np.min(Q[inN * i : inN * (i + 1)])
     if n * inN != Q.shape[0]:
-        b[n * inN:] = np.min(Q[n * inN:])
+        b[n * inN :] = np.min(Q[n * inN :])
     return b
